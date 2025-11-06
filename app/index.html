@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<!-- saved from url=(0163)https://ppl-ai-code-interpreter-files.s3.amazonaws.com/web/direct-files/aeca379b395e340654d3185a5b1cc355/7790d924-bd76-4aa0-a1b0-3f4a8ae27f7f/canvas-app/index.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Elipse - Asociación Musical</title>
+    <script src="./index_files/qrcode.min.js"></script>
+    <script src="./index_files/html5-qrcode"></script>
+    <script type="text/javascript" src="./index_files/email.min.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, push, onValue, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // CONFIGURACIÓN DE FIREBASE - REEMPLAZAR CON TUS CREDENCIALES
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "TU_AUTH_DOMAIN",
+            databaseURL: "TU_DATABASE_URL",
+            projectId: "TU_PROJECT_ID",
+            storageBucket: "TU_STORAGE_BUCKET",
+            messagingSenderId: "TU_MESSAGING_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.database = getDatabase(app);
+        window.auth = getAuth(app);
+        window.firebaseRefs = { ref, set, push, onValue, update };
+        window.firebaseAuth = { signInWithEmailAndPassword, signOut, onAuthStateChanged };
+    </script>
+    <style>
+        :root {
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-brown-600-rgb: 94, 82, 64;
+            --color-teal-500-rgb: 33, 128, 141;
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-primary-hover: var(--color-teal-600);
+            --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+            --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-btn-primary-text: var(--color-cream-50);
+            --color-error: var(--color-red-500);
+            --color-success: var(--color-teal-500);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-background: var(--color-charcoal-700);
+                --color-surface: var(--color-charcoal-800);
+                --color-text: var(--color-gray-200);
+                --color-text-secondary: rgba(167, 169, 169, 0.7);
+                --color-primary: var(--color-teal-300);
+                --color-btn-primary-text: var(--color-slate-900);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-teal-600));
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-content h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header-content p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: var(--color-surface);
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid var(--color-card-border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 24px;
+            color: var(--color-primary);
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .menu-item {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--color-card-border);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: var(--color-primary);
+        }
+
+        .menu-item-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .menu-item-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .content-section {
+            display: none;
+            background: var(--color-surface);
+            padding: 24px;
+            border-radius: 10px;
+            border: 1px solid var(--color-card-border);
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: var(--color-background);
+            color: var(--color-text);
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-btn-primary-text);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        .qr-display {
+            text-align: center;
+            padding: 24px;
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .checkbox-group input {
+            margin-top: 4px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        table th,
+        table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        table th {
+            background: var(--color-background);
+            font-weight: 600;
+        }
+
+        table tr:hover {
+            background: var(--color-background);
+        }
+
+        .scanner-container {
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        #qr-reader {
+            border: 2px solid var(--color-primary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--color-background);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--color-card-border);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .alert-success {
+            background: rgba(33, 128, 141, 0.15);
+            color: var(--color-primary);
+            border: 1px solid var(--color-primary);
+        }
+
+        .alert-error {
+            background: rgba(192, 21, 47, 0.15);
+            color: var(--color-error);
+            border: 1px solid var(--color-error);
+        }
+
+        .member-qr-container {
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px auto;
+            max-width: 400px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .back-btn {
+            margin-bottom: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--color-text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .menu {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de Login -->
+    <div id="loginScreen">
+        <div class="login-container">
+            <h2 class="login-title">🎵 La Elipse</h2>
+            <p style="text-align: center; color: var(--color-text-secondary); margin-bottom: 24px;">
+                Asociación Musical y de Fumadores<br>
+                <small>📍 Calle Hormigueras 175, Madrid</small>
+            </p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Usuario (Email)</label>
+                    <input type="email" class="form-control" id="loginEmail" required="">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="loginPassword" required="">
+                </div>
+                <div id="loginError" class="alert alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Aplicación Principal -->
+    <div id="appScreen" class="hidden">
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <h1>🎵 La Elipse</h1>
+                    <p>Asociación Musical y de Fumadores Sin Ánimo de Lucro</p>
+                    <p style="font-size: 12px; margin-top: 4px;">📍 Calle Hormigueras 175, Madrid</p>
+                    <p id="userRoleDisplay" style="font-size: 13px; margin-top: 8px; font-weight: 600;"></p>
+                </div>
+                <button class="logout-btn" onclick="handleLogout()">🚪 Cerrar Sesión</button>
+            </div>
+
+            <div id="menuSection">
+                <div class="menu" id="menuContainer"></div>
+            </div>
+
+            <!-- Sección QR de Registro -->
+            <div id="qrRegistro" class="content-section">
+                <button class="btn btn-secondary back-btn" onclick="backToMenu()">← Volver al Menú</button>
+                <h2>QR de Registro de Socios</h2>
+                <p style="margin: 16px 0; color: var(--color-text-secondary);">Escanea este código QR para acceder al formulario de registro</p>
+                <div class="qr-display">
+                    <div id="qrRegistroCode"></div>
+                    <p style="margin-top: 16px; font-weight: 500;">La Elipse - Asociación Musical</p>
+                </div>
+            </div>
+
+            <!-- Sección Alta de Socio -->
+            <div id="altaSocio" class="content-section">
+                <button class="btn btn-secondary back-btn" onclick="backToMenu()">← Volver al Menú</button>
+                <h2>Alta de Nuevo Socio</h2>
+                <form id="formAltaSocio" onsubmit="registrarSocio(event)">
+                    <div class="form-group">
+                        <label class="form-label">Nombre Completo *</label>
+                        <input type="text" class="form-control" id="nombre" required="">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNI/NIE *</label>
+                        <input type="text" class="form-control" id="dni" required="">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="email" required="">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teléfono *</label>
+                        <input type="tel" class="form-control" id="telefono" required="">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha de Nacimiento *</label>
+                        <input type="date" class="form-control" id="fechaNacimiento" required="">
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="rgpd" required="">
+                        <label for="rgpd" style="font-size: 13px;">
+                            Acepto la <strong>Ley de Protección de Datos (RGPD)</strong> y he leído las normas de la asociación. 
+                            Consiento el tratamiento de mis datos personales por parte de La Elipse para la gestión de mi afiliación, 
+                            actividades y comunicaciones de la asociación, conforme a la Ley Orgánica 3/2018 de Protección de Datos.
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 16px;">
+                        ✅ Registrar Socio
+                    </button>
+                </form>
+
+                <div id="socioRegistradoQR" class="hidden">
+                    <div class="alert alert-success">
+                        ✅ ¡Socio registrado correctamente! El código QR ha sido enviado por email.
+                    </div>
+                    <div class="member-qr-container">
+                        <h3>Código QR del Socio</h3>
+                        <p style="color: var(--color-text-secondary); margin: 8px 0;">Este código también fue enviado por email</p>
+                        <div id="socioQRCode"></div>
+                        <p id="socioNombre" style="font-weight: 600; margin-top: 16px;"></p>
+                        <p id="socioNumero" style="color: var(--color-text-secondary);"></p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="nuevoRegistro()" style="width: 100%;">
+                        Registrar Otro Socio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección Verificar Socio -->
+            <div id="verificarSocio" class="content-section">
+                <button class="btn btn-secondary back-btn" onclick="backToMenu()">← Volver al Menú</button>
+                <h2>Verificar Socio</h2>
+                <p style="margin: 16px 0; color: var(--color-text-secondary);">Escanea el código QR del socio para verificar su registro y registrar la visita</p>
+                
+                <div class="scanner-container">
+                    <div id="qr-reader"></div>
+                    <button class="btn btn-secondary" onclick="toggleScanner()" style="width: 100%; margin-top: 16px;" id="scannerBtn">
+                        📷 Iniciar Escáner
+                    </button>
+                </div>
+
+                <div id="resultadoVerificacion" class="hidden">
+                    <div id="alertVerificacion"></div>
+                    <div id="infoSocioVerificado"></div>
+                </div>
+            </div>
+
+            <!-- Sección Base de Datos (Solo Propietario) -->
+            <div id="baseDatos" class="content-section">
+                <button class="btn btn-secondary back-btn" onclick="backToMenu()">← Volver al Menú</button>
+                <h2>Base de Datos de Socios</h2>
+                <div class="loading" id="loadingSocios">Cargando datos...</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nº Socio</th>
+                                <th>Nombre</th>
+                                <th>DNI/NIE</th>
+                                <th>Email</th>
+                                <th>Fecha Nacimiento</th>
+                                <th>Fecha Alta</th>
+                                <th>Visitas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaSocios"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sección Estadísticas (Solo Propietario) -->
+            <div id="estadisticas" class="content-section">
+                <button class="btn btn-secondary back-btn" onclick="backToMenu()">← Volver al Menú</button>
+                <h2>Estadísticas</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalSocios">0</div>
+                        <div class="stat-label">Total Socios</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="visitasHoy">0</div>
+                        <div class="stat-label">Visitas Hoy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="visitasMes">0</div>
+                        <div class="stat-label">Visitas Este Mes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="visitasTotal">0</div>
+                        <div class="stat-label">Total Visitas</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 24px; margin-bottom: 16px;">Registro de Visitas</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Socio</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaVisitas"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let userRole = null;
+        let scannerActivo = false;
+        let html5QrcodeScanner = null;
+        let sociosData = {};
+        let visitasData = {};
+
+        // Inicializar EmailJS con tu PUBLIC KEY
+        (function() {
+            emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS"); // Reemplazar con tu clave pública
+        })();
+
+        // Esperar a que Firebase esté cargado
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                if (window.auth && window.firebaseAuth) {
+                    inicializarApp();
+                }
+            }, 500);
+        });
+
+        function inicializarApp() {
+            const { onAuthStateChanged } = window.firebaseAuth;
+            
+            onAuthStateChanged(window.auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    determinarRol(user.email);
+                    mostrarApp();
+                } else {
+                    mostrarLogin();
+                }
+            });
+        }
+
+        function determinarRol(email) {
+            // Configurar los usuarios autorizados
+            const propietarios = ['propietario@laelipse.es'];
+            const administradores = ['admin@laelipse.es'];
+
+            if (propietarios.includes(email)) {
+                userRole = 'propietario';
+            } else if (administradores.includes(email)) {
+                userRole = 'administrador';
+            } else {
+                userRole = 'administrador'; // Por defecto
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            const { signInWithEmailAndPassword } = window.firebaseAuth;
+
+            signInWithEmailAndPassword(window.auth, email, password)
+                .then((userCredential) => {
+                    currentUser = userCredential.user;
+                    determinarRol(email);
+                    mostrarApp();
+                })
+                .catch((error) => {
+                    errorDiv.textContent = 'Error: Usuario o contraseña incorrectos';
+                    errorDiv.classList.remove('hidden');
+                });
+        }
+
+        function handleLogout() {
+            const { signOut } = window.firebaseAuth;
+            signOut(window.auth).then(() => {
+                currentUser = null;
+                userRole = null;
+                mostrarLogin();
+            });
+        }
+
+        function mostrarLogin() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
+        }
+
+        function mostrarApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            document.getElementById('userRoleDisplay').textContent = 
+                `Rol: ${userRole === 'propietario' ? '👑 Propietario' : '⚙️ Administrador'}`;
+            
+            generarMenu();
+            generarQRRegistro();
+            cargarDatosFirebase();
+        }
+
+        function generarMenu() {
+            const menuContainer = document.getElementById('menuContainer');
+            const menuItems = [];
+
+            if (userRole === 'propietario') {
+                menuItems.push(
+                    { id: 'qrRegistro', icon: '📱', title: 'QR de Registro', desc: 'Escanear para registrarse' },
+                    { id: 'altaSocio', icon: '➕', title: 'Alta de Socio', desc: 'Registrar nuevo socio' },
+                    { id: 'verificarSocio', icon: '✅', title: 'Verificar Socio', desc: 'Comprobar códigos QR' },
+                    { id: 'baseDatos', icon: '📊', title: 'Base de Datos', desc: 'Gestión de socios' },
+                    { id: 'estadisticas', icon: '📈', title: 'Estadísticas', desc: 'Análisis de visitas' }
+                );
+            } else {
+                menuItems.push(
+                    { id: 'altaSocio', icon: '➕', title: 'Alta de Socio', desc: 'Registrar nuevo socio' },
+                    { id: 'verificarSocio', icon: '✅', title: 'Verificar Socio', desc: 'Comprobar códigos QR' }
+                );
+            }
+
+            menuContainer.innerHTML = menuItems.map(item => `
+                <div class="menu-item" onclick="showSection('${item.id}')">
+                    <div class="menu-item-icon">${item.icon}</div>
+                    <div class="menu-item-title">${item.title}</div>
+                    <small>${item.desc}</small>
+                </div>
+            `).join('');
+        }
+
+        function cargarDatosFirebase() {
+            const { ref, onValue } = window.firebaseRefs;
+
+            onValue(ref(window.database, 'socios'), (snapshot) => {
+                sociosData = snapshot.val() || {};
+            });
+
+            onValue(ref(window.database, 'visitas'), (snapshot) => {
+                visitasData = snapshot.val() || {};
+            });
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('menuSection').style.display = 'none';
+            document.getElementById(sectionId).classList.add('active');
+
+            if (sectionId === 'baseDatos') {
+                actualizarTablaSocios();
+            } else if (sectionId === 'estadisticas') {
+                actualizarEstadisticas();
+            }
+        }
+
+        function backToMenu() {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('menuSection').style.display = 'block';
+            
+            if (scannerActivo) {
+                toggleScanner();
+            }
+        }
+
+        function generarQRRegistro() {
+            const url = 'https://laelipse-madrid.es/registro';
+            const qrDiv = document.getElementById('qrRegistroCode');
+            qrDiv.innerHTML = '';
+            new QRCode(qrDiv, {
+                text: url,
+                width: 256,
+                height: 256,
+                colorDark: '#21808d',
+                colorLight: '#ffffff',
+            });
+        }
+
+        async function registrarSocio(event) {
+            event.preventDefault();
+
+            const socio = {
+                nombre: document.getElementById('nombre').value,
+                dni: document.getElementById('dni').value,
+                email: document.getElementById('email').value,
+                telefono: document.getElementById('telefono').value,
+                fechaNacimiento: document.getElementById('fechaNacimiento').value,
+                fechaAlta: new Date().toISOString(),
+                visitas: 0
+            };
+
+            const { ref, push, set } = window.firebaseRefs;
+            const nuevoSocioRef = push(ref(window.database, 'socios'));
+            socio.id = nuevoSocioRef.key;
+
+            await set(nuevoSocioRef, socio);
+
+            document.getElementById('formAltaSocio').style.display = 'none';
+            document.getElementById('socioRegistradoQR').classList.remove('hidden');
+
+            const qrDataURL = await generarQRSocio(socio);
+            
+            document.getElementById('socioNombre').textContent = socio.nombre;
+            document.getElementById('socioNumero').textContent = `Socio #${socio.id.substring(0, 8)}`;
+
+            enviarEmailConQR(socio, qrDataURL);
+        }
+
+        function generarQRSocio(socio) {
+            return new Promise((resolve) => {
+                const datosQR = JSON.stringify({
+                    id: socio.id,
+                    nombre: socio.nombre,
+                    dni: socio.dni,
+                    asociacion: 'La Elipse'
+                });
+
+                const qrDiv = document.getElementById('socioQRCode');
+                qrDiv.innerHTML = '';
+                const qrCode = new QRCode(qrDiv, {
+                    text: datosQR,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#21808d',
+                    colorLight: '#ffffff',
+                });
+
+                setTimeout(() => {
+                    const canvas = qrDiv.querySelector('canvas');
+                    const dataURL = canvas.toDataURL('image/png');
+                    resolve(dataURL);
+                }, 500);
+            });
+        }
+
+        function enviarEmailConQR(socio, qrDataURL) {
+            const templateParams = {
+                to_email: socio.email,
+                to_name: socio.nombre,
+                socio_id: socio.id.substring(0, 8),
+                qr_image: qrDataURL,
+                fecha_alta: new Date(socio.fechaAlta).toLocaleDateString('es-ES')
+            };
+
+            // Configurar con tu Service ID y Template ID de EmailJS
+            emailjs.send('TU_SERVICE_ID', 'TU_TEMPLATE_ID', templateParams)
+                .then((response) => {
+                    console.log('Email enviado exitosamente', response);
+                }, (error) => {
+                    console.error('Error al enviar email:', error);
+                    alert('El socio fue registrado pero hubo un error al enviar el email. Por favor, guarda el QR manualmente.');
+                });
+        }
+
+        function nuevoRegistro() {
+            document.getElementById('formAltaSocio').reset();
+            document.getElementById('formAltaSocio').style.display = 'block';
+            document.getElementById('socioRegistradoQR').classList.add('hidden');
+        }
+
+        function toggleScanner() {
+            if (!scannerActivo) {
+                iniciarScanner();
+            } else {
+                detenerScanner();
+            }
+        }
+
+        function iniciarScanner() {
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.0
+            };
+
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanError
+            ).then(() => {
+                scannerActivo = true;
+                document.getElementById('scannerBtn').textContent = '⏹️ Detener Escáner';
+            }).catch(err => {
+                console.error('Error al iniciar el escáner:', err);
+                alert('No se pudo acceder a la cámara. Por favor, verifica los permisos.');
+            });
+        }
+
+        function detenerScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    scannerActivo = false;
+                    document.getElementById('scannerBtn').textContent = '📷 Iniciar Escáner';
+                }).catch(err => {
+                    console.error('Error al detener el escáner:', err);
+                });
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            detenerScanner();
+            verificarSocioQR(decodedText);
+        }
+
+        function onScanError(errorMessage) {
+            // Ignorar errores continuos de escaneo
+        }
+
+        function verificarSocioQR(datosQR) {
+            try {
+                const datos = JSON.parse(datosQR);
+                const socio = sociosData[datos.id];
+
+                const resultadoDiv = document.getElementById('resultadoVerificacion');
+                const alertDiv = document.getElementById('alertVerificacion');
+                const infoDiv = document.getElementById('infoSocioVerificado');
+                
+                resultadoDiv.classList.remove('hidden');
+
+                if (socio) {
+                    alertDiv.innerHTML = '<div class="alert alert-success">✅ Socio verificado correctamente</div>';
+                    
+                    const { ref, push, set, update } = window.firebaseRefs;
+                    
+                    const visita = {
+                        socioId: socio.id,
+                        socioNombre: socio.nombre,
+                        fecha: new Date().toISOString(),
+                        fechaFormato: new Date().toLocaleDateString('es-ES'),
+                        hora: new Date().toLocaleTimeString('es-ES')
+                    };
+                    
+                    const nuevaVisitaRef = push(ref(window.database, 'visitas'));
+                    set(nuevaVisitaRef, visita);
+
+                    const socioRef = ref(window.database, `socios/${socio.id}`);
+                    update(socioRef, { visitas: (socio.visitas || 0) + 1 });
+
+                    infoDiv.innerHTML = `
+                        <div style="background: var(--color-background); padding: 16px; border-radius: 8px; margin-top: 16px;">
+                            <h3>Información del Socio</h3>
+                            <p><strong>Nombre:</strong> ${socio.nombre}</p>
+                            <p><strong>Nº Socio:</strong> #${socio.id.substring(0, 8)}</p>
+                            <p><strong>DNI:</strong> ${socio.dni}</p>
+                            <p><strong>Total Visitas:</strong> ${(socio.visitas || 0) + 1}</p>
+                            <p><strong>Fecha Alta:</strong> ${new Date(socio.fechaAlta).toLocaleDateString('es-ES')}</p>
+                        </div>
+                    `;
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-error">❌ Socio no encontrado en la base de datos</div>';
+                    infoDiv.innerHTML = '';
+                }
+
+                setTimeout(() => {
+                    resultadoDiv.classList.add('hidden');
+                }, 10000);
+
+            } catch (error) {
+                alert('Código QR no válido');
+            }
+        }
+
+        function actualizarTablaSocios() {
+            const tbody = document.getElementById('tablaSocios');
+            const loading = document.getElementById('loadingSocios');
+            tbody.innerHTML = '';
+
+            const sociosArray = Object.values(sociosData);
+            
+            if (sociosArray.length === 0) {
+                loading.style.display = 'block';
+            } else {
+                loading.style.display = 'none';
+                sociosArray.forEach(socio => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>#${socio.id.substring(0, 8)}</td>
+                        <td>${socio.nombre}</td>
+                        <td>${socio.dni}</td>
+                        <td>${socio.email}</td>
+                        <td>${new Date(socio.fechaNacimiento).toLocaleDateString('es-ES')}</td>
+                        <td>${new Date(socio.fechaAlta).toLocaleDateString('es-ES')}</td>
+                        <td>${socio.visitas || 0}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function actualizarEstadisticas() {
+            const sociosArray = Object.values(sociosData);
+            const visitasArray = Object.values(visitasData);
+
+            document.getElementById('totalSocios').textContent = sociosArray.length;
+            
+            const hoy = new Date().toLocaleDateString('es-ES');
+            const visitasHoy = visitasArray.filter(v => v.fechaFormato === hoy).length;
+            document.getElementById('visitasHoy').textContent = visitasHoy;
+
+            const mesActual = new Date().getMonth();
+            const añoActual = new Date().getFullYear();
+            const visitasMes = visitasArray.filter(v => {
+                const fecha = new Date(v.fecha);
+                return fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual;
+            }).length;
+            document.getElementById('visitasMes').textContent = visitasMes;
+
+            document.getElementById('visitasTotal').textContent = visitasArray.length;
+
+            const tbody = document.getElementById('tablaVisitas');
+            tbody.innerHTML = '';
+
+            const visitasOrdenadas = visitasArray.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+            visitasOrdenadas.slice(0, 50).forEach(visita => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${visita.socioNombre}</td>
+                    <td>${visita.fechaFormato}</td>
+                    <td>${visita.hora}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+
+
+<protonpass-root-45d7 data-protonpass-role="root" data-protonpass-theme="os"><template shadowrootmode="closed"><iframe src="chrome-extension://ghmbeldphafepmbegfdlkpapadhbakde/dropdown.html" style="--frame-animation: fadein;"></iframe></template></protonpass-root-45d7></body></html>
